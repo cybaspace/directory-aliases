@@ -1,0 +1,32 @@
+# To use the aliases from this file the 'bin/da' file must be in $PATH
+
+# Display help about the aliases
+alias dahelp='_dahelp $1'                    ## show help about defined aliases
+
+# Update the installation
+alias daupdate='cd $HOME/.hybris-workplace; git pull; if [[ $? == 0 ]]; then; echo "Updated directory aliases, changes will take effect in new console session"; fi'  ## updates the actual directory aliases installation
+
+# use directory aliases for easy navigation
+alias daa='da add'          ## add an alias to the actual directory - alias name as parameter
+alias dal='da list'         ## list all defined directory aliases
+alias dar='da remove'       ## remove the specified directory alias from index - alias name as parameter
+alias dag='_dag $1'         ## goto directory with given alias
+
+# used for directory alias goto
+function _dag() {
+  if [[ -z $1 ]]; then
+    echo "Specify the name of the directory alias you want to go to"
+    return
+  fi
+  if [[ -d "$1" ]]; then
+    builtin cd "$1"
+    return
+  fi
+  alias=$1
+  da_path=`da path $alias`
+  if [[ -d "$da_path" ]]; then
+     builtin cd "$da_path"
+  else
+    echo `da path $alias`
+  fi
+}

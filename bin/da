@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+DIRECTORY_ALIAS_FILE="$HOME/.dir-aliases"
+
+
+if [[ -z $1 ]]; then
+  echo "you must specify what to do [add|remove|list]"
+  echo ""
+  exit
+fi
+
+command=$1
+
+declare -A aliases
+
+if [[ -e $DIRECTORY_ALIAS_FILE ]]; then
+  while IFS== read -r key value; do
+    aliases[$key]=$value
+  done < "$DIRECTORY_ALIAS_FILE"
+fi
+
+export() {
+  rm "$DIRECTORY_ALIAS_FILE"
+  for key in "${!aliases[@]}"; do
+    echo "$key=${aliases[$key]}" >> "$DIRECTORY_ALIAS_FILE"
+  done
+}
+
+case $command in
+  keylist)
+    echo "${!aliases[@]}"
+    ;;
+  list)
+    for key in "${!aliases[@]}"; do
+      echo -e "$key\t${aliases[$key]}"
+    done
+    ;;
+  path)
+    name=${2,,}
+    if [[ -z ${aliases[$name]} ]]; then
+      echo "$name is not defined as directory alias - use 'list' to list the defined directory aliases"
+    else
+      echo "${aliases[$name]}"
+    fi
+    ;;
+  add)
+    name=${2,,}
+    path=`pwd`
+    if [[ -n ${aliases[$name]} ]]; then
+      echo "$name already defined as directory alias"
+    else
+      echo "$name=$path" >> $DIRECTORY_ALIAS_FILE
+    fi
+    ;;
+  remove)
+    #sed -i '' "/^$name /d" $DIRECTORY_ALIAS_FILE
+    name=${2,,}
+    if [[ -z ${aliases[$name]} ]]; then
+      echo "$name is not defined as directory alias - use 'list' to list the defined directory aliases"
+    else
+      unset aliases[$name]
+      export
+    fi
+    ;;
+esac

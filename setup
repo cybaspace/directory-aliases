@@ -1,0 +1,75 @@
+#!/bin/bash
+
+INSTALL_DIR="$HOME/.dir-aliases"
+GIT_URL="https://github.com/cybaspace/directory-aliases.git"
+
+echo ""
+echo "Setup directory aliases tool"
+echo ""
+
+if [[ -e $INSTALL_DIR ]]; then
+  echo "Directory aliases tool already installed!"
+  echo ""
+  echo "Use daupdate instead"
+  echo ""
+  exit 1
+fi
+
+mkdir "$INSTALL_DIR"
+cd "$INSTALL_DIR"
+
+git clone $GIT_URL .
+
+add_to_file() {
+  file=$1
+  actual_date=`date "+%d.%m.%Y %H:%M"`
+
+  if [[ -e "$file" ]]; then
+    header_added='false'
+    for line in ${lines_to_add[@]}; do
+      line_to_add=`echo $line | sed 's/++/ /g'`
+      prop_key=`echo "$line_to_add" | sed 's/=.*/=/'`
+      if [[ $prop_key == 'export PATH=' ]]; then
+        # this must always be installed
+        prop_key='line that will never ever be found in the rc-files!!!'
+      fi
+      grep "$prop_key" "$file" >/dev/null
+      if [[ $? != 0 ]]; then
+        if [[ $header_added == 'false' ]]; then
+          echo "" >> "$file"
+          echo "# added by hybris workplace setup $actual_date" >> "$file"
+          header_added='true'
+        fi
+        echo "$line_to_add" >> "$file"
+      fi
+    done
+    if [[ $header_added == 'true' ]]; then
+      echo "# ---- end add by hybris workplace setup" >> "$file"
+    fi
+  fi
+}
+
+declare -a lines_to_add
+lines_to_add+=('source++'$INSTALL_DIR'/directory-aliases')
+
+actual_path=$(echo $PATH)
+if [[ $actual_path =~ "$INSTALL_DIR/bin" ]]; then
+  : # user bin directory already contained in path
+else
+  lines_to_add+=("export++PATH=\$PATH:$INSTALL_DIR/bin")
+fi
+
+if [[ -e "$HOME/.zshrc" ]]; then
+  add_to_file "$HOME/.zshrc"
+fi
+if [[ -e "$HOME/.bashrc" ]]; then
+  add_to_file "$HOME/.bashrc"
+else
+  add_to_file "$HOME/.bash_profile"
+fi
+
+echo "done"
+echo ""
+echo "The aliases will take effect on a new console session"
+echo "To use them now, please close this console window and start a new one"
+echo ""
