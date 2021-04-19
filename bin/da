@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DIRECTORY_ALIAS_FILE="$HOME/.dir-aliases"
+DIRECTORY_ALIAS_FILE="$HOME/.directory-aliases"
 
 
 if [[ -z $1 ]]; then
